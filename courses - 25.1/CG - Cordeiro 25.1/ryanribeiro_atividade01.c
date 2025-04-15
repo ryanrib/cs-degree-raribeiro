@@ -49,8 +49,22 @@ void abrir_arquivos(int argc, char *argv[]) {
 void ler_imagem(void) {
   int cont, col, lin;
   imagemR= (int **)malloc((nlin)*sizeof(int *));
+  if (imagemR == NULL) {
+    printf("Falha na alocacao de memoria para imagemR\n");
+    exit(1);
+  }
   imagemG= (int **)malloc((nlin)*sizeof(int *));
+  if (imagemG == NULL) {
+    printf("Falha na alocacao de memoria para imagemG\n");
+    exit(1);
+  }
+
   imagemB= (int **)malloc((nlin)*sizeof(int *));
+  if (imagemB == NULL) {
+    printf("Falha na alocacao de memoria para imagemB\n");
+    exit(1);
+  }
+
   for (cont=0;cont<nlin;cont++) {
     imagemR[cont]=(int *)malloc(ncol*sizeof(int));
     if (imagemR[cont]==NULL) { /* Alocar memoria para a matriz de pixels */
@@ -70,18 +84,36 @@ void ler_imagem(void) {
   }
   for (lin=0;lin<nlin;lin++) {
     for (col=0;col<ncol;col++) {
-      fscanf(fpin,"%d ",&imagemR[lin][col]);
-      fscanf(fpin,"%d ",&imagemG[lin][col]);
-      fscanf(fpin,"%d ",&imagemB[lin][col]);
+      if (fscanf(fpin,"%d ",&imagemR[lin][col]) != 1) {
+        printf("Erro na leitura do canal R[%d][%d]. Arquivo pode estar corrompido.\n", lin, col);
+        exit(1);
+      }
+      if (fscanf(fpin,"%d ",&imagemG[lin][col]) != 1) {
+        printf("Erro na leitura do canal G[%d][%d]. Arquivo pode estar corrompido.\n", lin, col);
+        exit(1);
+      }
+      if (fscanf(fpin,"%d ",&imagemB[lin][col]) != 1) {
+        printf("Erro na leitura do canal B[%d][%d]. Arquivo pode estar corrompido.\n", lin, col);
+        exit(1);
+      }
     }
   }
 } // Fim: ler_imagem
 
 void ler_cabecalho(void) {
      char controle[4];
-     fscanf(fpin,"%s\n",controle);
-     fscanf(fpin,  "%d %d\n",&ncol,&nlin);
-     fscanf(fpin,"%d\n",&quantizacao);
+     if (fscanf(fpin,"%3s", controle) != 1) {
+        printf("Erro ao ler o formato do arquivo. Arquivo pode estar corrompido.\n");
+        exit(1);
+     }
+     if (fscanf(fpin, "%d %d",&ncol,&nlin) != 2) {
+        printf("Erro ao ler as dimensões da imagem. Arquivo pode estar corrompido.\n");
+        exit(1);
+     }
+     if (fscanf(fpin,"%d",&quantizacao) != 1) {
+        printf("Erro ao ler o valor de quantização. Arquivo pode estar corrompido.\n");
+        exit(1);
+     }
 } // Fim: ler_cabecalho
 
 void fechar_arquivos(void) {
@@ -134,7 +166,7 @@ void gravar_imagemB(void) {
     }
     fprintf(fpoutB,"\n");
   }
-}
+} //gravar_imagemB
 
 void gerar_cinza_simples(char *nome_saida) {
   FILE *fpout;
@@ -143,7 +175,7 @@ void gerar_cinza_simples(char *nome_saida) {
     printf("Nao foi possivel abrir arquivo de saida %s\n", nome_saida);
     exit(1);
   }
-  fprintf(fpout,"P2\n");  // P2 para PGM (grayscale)
+  fprintf(fpout,"P2\n");  // P2 para PGM (escala de cinza)
   fprintf(fpout,"%d %d\n",ncol,nlin);
   fprintf(fpout,"%d\n",quantizacao);
   for (lin=0;lin<nlin;lin++) {
@@ -159,21 +191,21 @@ void gerar_cinza_simples(char *nome_saida) {
 void gerar_cinza_ponderado(char *nome_saida) {
   FILE *fpout;
   int lin, col;
-  int valor_cinza;
+  float valor_cinza;
   
   if ((fpout=fopen(nome_saida,"w"))==NULL) {
     printf("Nao foi possivel abrir arquivo de saida %s\n", nome_saida);
     exit(1);
   }
   
-  fprintf(fpout,"P2\n");  // P2 para PGM (grayscale)
+  fprintf(fpout,"P2\n");  // P2 para PGM (escala de cinza)
   fprintf(fpout,"%d %d\n",ncol,nlin);
   fprintf(fpout,"%d\n",quantizacao);
   
   for (lin=0;lin<nlin;lin++) {
     for (col=0;col<ncol;col++) {
       valor_cinza = 0.299*imagemR[lin][col] + 0.587*imagemG[lin][col] + 0.114*imagemB[lin][col];
-      fprintf(fpout,"%d ",valor_cinza);
+      fprintf(fpout,"%d ", (int)valor_cinza);
     }
     fprintf(fpout,"\n");
   }
@@ -207,9 +239,9 @@ void gerar_negativo(char *nome_saida) {
 void extrair_nome_base(char *caminho) {
     int i, j, ultimo_separador = -1, ultimo_ponto = -1;
     
-    // Encontrar a última ocorrência de '\\'
+    // Encontrar a última ocorrência de '\\' ou '/'
     for (i = 0; caminho[i] != '\0'; i++) {
-        if (caminho[i] == '\\') {
+        if (caminho[i] == '\\' || caminho[i] == '/') {
             ultimo_separador = i;
         }
         if (caminho[i] == '.') {
@@ -237,12 +269,12 @@ void gerar_nome_arquivo(char* sufixo, char* extensao) {
     i++;
   }
   
-  // Adiciona o sufixo e a extensão
+  // Adiciona o sufixo e a extensao
   nome_saida[i++] = '_';
   nome_saida[i++] = sufixo[0];
   nome_saida[i++] = '.';
   
-  // Adiciona a extensão
+  // Adiciona a extensao
   int j = 0;
   while (extensao[j] != '\0') {
     nome_saida[i++] = extensao[j++];
@@ -252,15 +284,15 @@ void gerar_nome_arquivo(char* sufixo, char* extensao) {
 }
 
 void processar_imagens() {
-  // Versão 1: Tons de cinza (média simples)
+  // Versão 1: Tons de cinza (media simples)
   gerar_nome_arquivo("1", "pgm");
   gerar_cinza_simples(nome_saida);
   
-  // Versão 2: Tons de cinza (média ponderada)
+  // Versão 2: Tons de cinza (media ponderada)
   gerar_nome_arquivo("2", "pgm");
   gerar_cinza_ponderado(nome_saida);
   
-  // Versão 3: Negativo
+  // Versão 3: Negativo (inversão de cores)
   gerar_nome_arquivo("3", "ppm");
   gerar_negativo(nome_saida);
 }
@@ -269,17 +301,32 @@ void liberar_memoria(void) {
   int i;
   
   // Liberar cada linha das matrizes
-  for (i = 0; i < nlin; i++) {
-    free(imagemR[i]);
-    free(imagemG[i]);
-    free(imagemB[i]);
+  if (imagemR != NULL) {
+    for (i = 0; i < nlin; i++) {
+      free(imagemR[i]);
+    }
   }
-  
-  // Liberar os arrays de ponteiros
-  free(imagemR);
-  free(imagemG);
-  free(imagemB);
-}
+  if (imagemG != NULL) {
+    for (i = 0; i < nlin; i++) {
+      if (imagemG[i] != NULL) {
+        free(imagemG[i]);
+      }
+    }
+  }
+  if (imagemB != NULL) {
+    for (i = 0; i < nlin; i++) {
+      if (imagemB[i] != NULL) {
+        free(imagemB[i]);
+      }
+    }
+    // Liberar os arrays de ponteiros
+    free(imagemR);
+    free(imagemB);
+    free(imagemG);
+  }
+    } 
+
+
 
 int main(int argc, char *argv[]) {
   abrir_arquivos(argc,argv);
