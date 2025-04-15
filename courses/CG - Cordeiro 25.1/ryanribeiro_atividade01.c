@@ -18,6 +18,9 @@ void gerar_cinza_simples(char *nome_saida);
 void gerar_cinza_ponderado(char *nome_saida);
 void gerar_negativo(char *nome_saida);
 void extrair_nome_base(char *caminho);
+void gerar_nome_arquivo(char* sufixo, char* extensao);
+void processar_imagens(void);
+void liberar_memoria(void);
 
 void abrir_arquivos(int argc, char *argv[]) {
      if (argc  <=1) {
@@ -60,7 +63,7 @@ void ler_imagem(void) {
       exit(1);
     }
     imagemB[cont]=(int *)malloc(ncol*sizeof(int));
-    if (imagemR[cont]==NULL) { /* Alocar memoria para a matriz de pixels */
+    if (imagemB[cont]==NULL) { /* Alocar memoria para a matriz de pixels */
       printf("Falha na alocacao de memoria - 1\n");
       exit(1);
     }
@@ -222,6 +225,62 @@ void extrair_nome_base(char *caminho) {
     nome_base[j] = '\0';
 }
 
+void gerar_nome_arquivo(char* sufixo, char* extensao) {
+  int i = 0;
+  
+  // Limpa o buffer de saída
+  nome_saida[0] = '\0';
+  
+  // Copia o nome base
+  while (nome_base[i] != '\0') {
+    nome_saida[i] = nome_base[i];
+    i++;
+  }
+  
+  // Adiciona o sufixo e a extensão
+  nome_saida[i++] = '_';
+  nome_saida[i++] = sufixo[0];
+  nome_saida[i++] = '.';
+  
+  // Adiciona a extensão
+  int j = 0;
+  while (extensao[j] != '\0') {
+    nome_saida[i++] = extensao[j++];
+  }
+  
+  nome_saida[i] = '\0';
+}
+
+void processar_imagens() {
+  // Versão 1: Tons de cinza (média simples)
+  gerar_nome_arquivo("1", "pgm");
+  gerar_cinza_simples(nome_saida);
+  
+  // Versão 2: Tons de cinza (média ponderada)
+  gerar_nome_arquivo("2", "pgm");
+  gerar_cinza_ponderado(nome_saida);
+  
+  // Versão 3: Negativo
+  gerar_nome_arquivo("3", "ppm");
+  gerar_negativo(nome_saida);
+}
+
+void liberar_memoria(void) {
+  int i;
+  
+  // Liberar cada linha das matrizes
+  for (i = 0; i < nlin; i++) {
+    free(imagemR[i]);
+    free(imagemG[i]);
+    free(imagemB[i]);
+  }
+  
+  // Liberar os arrays de ponteiros
+  free(imagemR);
+  free(imagemG);
+  free(imagemB);
+}
+
 int main(int argc, char *argv[]) {
   abrir_arquivos(argc,argv);
   ler_cabecalho();
@@ -234,54 +293,10 @@ int main(int argc, char *argv[]) {
   extrair_nome_base(argv[1]);
   
   // Gera as três versões solicitadas
-  // Versão 1: Tons de cinza (média simples)
-  nome_saida[0] = '\0'; // Limpa o buffer
-  int i = 0;
-  while (nome_base[i] != '\0') {
-    nome_saida[i] = nome_base[i];
-    i++;
-  }
-  nome_saida[i++] = '_';
-  nome_saida[i++] = '1';
-  nome_saida[i++] = '.';
-  nome_saida[i++] = 'p';
-  nome_saida[i++] = 'g';
-  nome_saida[i++] = 'm';
-  nome_saida[i] = '\0';
-  gerar_cinza_simples(nome_saida);
+  processar_imagens();
   
-  // Versão 2: Tons de cinza (média ponderada)
-  nome_saida[0] = '\0'; // Limpa o buffer
-  i = 0;
-  while (nome_base[i] != '\0') {
-    nome_saida[i] = nome_base[i];
-    i++;
-  }
-  nome_saida[i++] = '_';
-  nome_saida[i++] = '2';
-  nome_saida[i++] = '.';
-  nome_saida[i++] = 'p';
-  nome_saida[i++] = 'g';
-  nome_saida[i++] = 'm';
-  nome_saida[i] = '\0';
-  gerar_cinza_ponderado(nome_saida);
-  
-  // Versão 3: Negativo
-  nome_saida[0] = '\0'; // Limpa o buffer
-  i = 0;
-  while (nome_base[i] != '\0') {
-    nome_saida[i] = nome_base[i];
-    i++;
-  }
-  nome_saida[i++] = '_';
-  nome_saida[i++] = '3';
-  nome_saida[i++] = '.';
-  nome_saida[i++] = 'p';
-  nome_saida[i++] = 'p';
-  nome_saida[i++] = 'm';
-  nome_saida[i] = '\0';
-  gerar_negativo(nome_saida);
-  
+ 
   fechar_arquivos();
+  liberar_memoria();
   return 0;
 }
