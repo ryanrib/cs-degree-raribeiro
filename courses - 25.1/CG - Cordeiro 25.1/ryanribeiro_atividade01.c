@@ -255,7 +255,7 @@ void extrair_nome_base(char *caminho) {
         nome_base[j++] = caminho[i];
     }
     nome_base[j] = '\0';
-}
+} // extrair_nome_base
 
 void gerar_nome_arquivo(char* sufixo, char* extensao) {
   int i = 0;
@@ -295,7 +295,7 @@ void processar_imagens() {
   // Versão 3: Negativo (inversão de cores)
   gerar_nome_arquivo("3", "ppm");
   gerar_negativo(nome_saida);
-}
+} // processar_imagens
 
 void liberar_memoria(void) {
   int i;
@@ -324,7 +324,7 @@ void liberar_memoria(void) {
     free(imagemB);
     free(imagemG);
   }
-    } 
+} // liberar_memoria
 
 
 
