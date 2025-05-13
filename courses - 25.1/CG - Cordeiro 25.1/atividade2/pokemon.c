@@ -1,3 +1,5 @@
+// Aluno: Ryan Araujo Ribeiro
+// Disciplina: Computacao Grafica
 #include <GL/glut.h>
 #include <math.h>
 

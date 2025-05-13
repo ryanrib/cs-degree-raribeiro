@@ -1,3 +1,6 @@
+// Aluno: Ryan Araujo Ribeiro
+// Disciplina: Computacao Grafica
+
 #include <stdio.h>
 #include <stdlib.h>
 

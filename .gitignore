@@ -1,0 +1,63 @@
+# Arquivos de sistema
+.DS_Store
+Thumbs.db
+
+# Arquivos temporários
+*.tmp
+*.log
+*.swp
+*.swo
+
+# Arquivos de compilação
+*.o
+*.out
+*.class
+*.exe
+*.dll
+*.so
+*.a
+*.lib
+
+# Diretórios de build
+build/
+dist/
+node_modules/
+
+# Arquivos de IDE
+.vscode/
+.idea/
+*.iml
+
+# Arquivos sensíveis
+*.env
+*.key
+*.pem
+
+# Arquivos de backup
+*.bak
+*.old
+*.orig
+
+# Arquivos gerados por ferramentas
+*.pyc
+__pycache__/
+*.ipynb_checkpoints/
+
+# Arquivos específicos do projeto
+*.pdf
+*.ppt
+*.pptx
+*.docx
+*.mp4
+*.jpg
+*.jpeg
+*.png
+*.zip
+*.jar
+
+# Diretórios específicos
+**/Slides/
+!**/nossas listas/
+!PEI - Tricia 25.1/*
+!**/atividade2/.vscode
+
